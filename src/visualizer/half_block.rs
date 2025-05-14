@@ -43,14 +43,6 @@ impl HalfBlockRenderer {
         self.surface.resize(size, ResizeMode::Discard)
     }
 
-    pub fn width(&self) -> u32 {
-        self.size.width
-    }
-
-    pub fn height(&self) -> u32 {
-        self.size.height
-    }
-
     pub fn dimensions(&self) -> Size {
         self.size
     }

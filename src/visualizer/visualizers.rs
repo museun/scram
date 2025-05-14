@@ -1,14 +1,14 @@
 use core::f32;
 use std::f32::consts::TAU;
 
-use mars_app::{Position, Rgba};
+use mars_app::{Position, Rgba, Size};
 
 use crate::{
     math::{inverse_lerp, lerp, lerp_color},
     process::Frequency,
 };
 
-use super::half_block::HalfBlockRenderer;
+use super::HalfBlockRenderer;
 
 pub fn draw_stacked_freqs(
     left: &[Frequency],
@@ -18,8 +18,8 @@ pub fn draw_stacked_freqs(
 ) {
     let max = 1.0;
 
-    let width = renderer.width() as i32;
-    let height = renderer.height() as i32 / 4;
+    let Size { width, height } = renderer.dimensions().to_signed();
+    let height = height / 4;
 
     let w = (width as f32 / left.len() as f32).max(1.0);
 
@@ -59,7 +59,7 @@ pub fn draw_spec_slice(
     _dt: f32,
     renderer: &mut HalfBlockRenderer,
 ) {
-    let width = renderer.width() as i32;
+    let Size { width, .. } = renderer.dimensions().to_signed();
     let w = (width as f32 / left.len() as f32).min(1.0);
 
     for (i, (l, r)) in left.iter().zip(right.iter()).enumerate() {
@@ -80,8 +80,7 @@ pub fn draw_radial_bloom(
     dt: f32,
     renderer: &mut HalfBlockRenderer,
 ) {
-    let width = renderer.width() as i32;
-    let height = renderer.height() as i32;
+    let Size { width, height } = renderer.dimensions().to_signed();
     let cx = width / 2;
     let cy = height / 2;
 
@@ -144,13 +143,13 @@ pub fn draw_spec_circular(
     dt: f32,
     renderer: &mut HalfBlockRenderer,
 ) {
-    let total = left.len();
-    let w = renderer.width() as i32;
-    let h = renderer.height() as i32;
-    let cx = w / 2;
-    let cy = h / 2;
+    let Size { width, height } = renderer.dimensions().to_signed();
+    let cx = width / 2;
+    let cy = height / 2;
 
-    let max_radius = (w.min(h) as f32 / 2.0) * 1.3;
+    let total = left.len();
+
+    let max_radius = (width.min(height) as f32 / 2.0) * 1.3;
     let base_radius = max_radius * 0.1;
 
     let max = 1.0;
@@ -182,16 +181,15 @@ pub fn kinetic(left: &[Frequency], right: &[Frequency], dt: f32, renderer: &mut 
     const AMPLITUDE: f32 = 200.0;
     const OSCILLATOR: f32 = 0.5;
 
+    let Size { width, height } = renderer.dimensions().to_signed();
     let total = left.len();
-    let w = renderer.width() as i32;
-    let h = renderer.height() as i32;
 
     let max = 1.0;
-    let max_y = h - 1;
+    let max_y = height - 1;
 
     for (i, (l, r)) in left.iter().zip(right.iter()).enumerate() {
-        let x = (i as f32 / total as f32 * w as f32) as i32;
-        if x < 0 || x >= w {
+        let x = (i as f32 / total as f32 * width as f32) as i32;
+        if x < 0 || x >= width {
             continue;
         }
 
@@ -199,7 +197,7 @@ pub fn kinetic(left: &[Frequency], right: &[Frequency], dt: f32, renderer: &mut 
         // let peak = (l.peak + r.peak) / 2.0;
 
         let y = (value / max).clamp(0.0, 1.0);
-        let y = max_y - (y * h as f32) as i32;
+        let y = max_y - (y * height as f32) as i32;
 
         let ratio = i as f32 / total as f32;
         let velocity = lerp(50.0, -50.0, ratio);
@@ -219,7 +217,7 @@ pub fn kinetic(left: &[Frequency], right: &[Frequency], dt: f32, renderer: &mut 
             let fade = j as f32 / TRAIL_POINTS as f32;
             let color = lerp_color(color, color, fade);
 
-            if x >= 0 && x < w && y >= 0 && y < h {
+            if x >= 0 && x < width && y >= 0 && y < height {
                 renderer.put(Position::new(x, y), color);
             }
         }
