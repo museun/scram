@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 pub mod config;
-pub use config::*;
+use config::*;
 
 mod buffer;
 pub use buffer::Buffer;
@@ -43,7 +43,7 @@ struct Channel {
 
     band_magnitudes: Vec<f32>,
     smoothed_band_magnitudes: Vec<f32>,
-    bars: Vec<Frequency>,
+    frequencies: Vec<Frequency>,
 }
 
 pub struct Processor {
@@ -69,7 +69,7 @@ impl Processor {
             fft_magnitudes: Box::from([0.0; SAMPLE_SIZE / 2 + 1]),
             band_magnitudes: vec![0.0; 0],
             smoothed_band_magnitudes: vec![0.0; 0],
-            bars: vec![bar; 0],
+            frequencies: vec![bar; 0],
         };
         let right = left.clone();
 
@@ -107,13 +107,13 @@ impl Processor {
             band.band_magnitudes.resize(bands, 0.0);
             band.smoothed_band_magnitudes.resize(bands, 0.0);
             band.smoothed_band_magnitudes.fill(0.0);
-            band.bars.clear();
-            band.bars.resize(bands, bar);
+            band.frequencies.clear();
+            band.frequencies.resize(bands, bar);
         }
     }
 
     pub fn current_frequencies(&self) -> (&[Frequency], &[Frequency]) {
-        (&self.left.bars, &self.right.bars)
+        (&self.left.frequencies, &self.right.frequencies)
     }
 
     #[profiling::function]

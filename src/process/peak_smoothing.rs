@@ -9,7 +9,7 @@ pub fn apply_peak_smoothing(
     dt: f32,
     config: &PeakSmoothing,
 ) {
-    for (bar, &band) in channel.bars.iter_mut().zip(&channel.band_magnitudes) {
+    for (bar, &band) in channel.frequencies.iter_mut().zip(&channel.band_magnitudes) {
         if band > bar.value {
             let attack = config.attack_rate * dt;
             bar.value = (bar.value + attack).min(band);

@@ -12,7 +12,7 @@ pub fn aggregate_bands(channel: &mut Channel, sample_rate: u32, binning: &Binnin
 
     let opts = Opts {
         num_bins,
-        num_bands: channel.bars.len(),
+        num_bands: channel.frequencies.len(),
         min_freq: binning.frequency_cutoff.low,
         max_freq: binning.frequency_cutoff.high,
         hz_per,
