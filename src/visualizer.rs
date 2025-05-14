@@ -133,21 +133,18 @@ mod draw_stuff {
                     continue;
                 }
 
-                // let target = (modulated / limit).round() as i32;
-                // for i in 1..target {
                 if x + 1 < width {
                     renderer.put(Position::new(x + 1, y), color)
                 }
-                if x - 1 >= 0 {
+                if x > 0 {
                     renderer.put(Position::new(x - 1, y), color)
                 }
                 if y + 1 < height {
                     renderer.put(Position::new(x, y + 1), color)
                 }
-                if y - 1 >= 0 {
+                if y > 0 {
                     renderer.put(Position::new(x, y - 1), color)
                 }
-                // }
             }
         }
     }
@@ -238,7 +235,7 @@ mod draw_stuff {
                 let fade = j as f32 / TRAIL_POINTS as f32;
                 let color = lerp_color(color, color, fade);
 
-                if x >= 0 && x < w as i32 && y >= 0 && y < h {
+                if x >= 0 && x < w && y >= 0 && y < h {
                     renderer.put(Position::new(x, y), color);
                 }
             }
