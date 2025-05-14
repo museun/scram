@@ -1,4 +1,3 @@
-use core::f32;
 use std::time::Instant;
 
 pub mod config;
@@ -8,11 +7,25 @@ mod buffer;
 pub use buffer::Buffer;
 
 mod band_smoothing;
+use band_smoothing::apply_band_smoothing;
+
 mod bands;
+use bands::aggregate_bands;
+
 mod magnitudes;
+use magnitudes::calculate_magnitudes;
+
 mod peak_smoothing;
+use peak_smoothing::apply_peak_smoothing;
+
+mod preprocess;
+use preprocess::preprocess;
+
 mod rfft;
+use rfft::apply_rfft;
+
 mod scaling;
+use scaling::apply_scaling;
 
 pub const SAMPLE_SIZE: usize = 4096;
 
@@ -110,71 +123,27 @@ impl Processor {
         self.last_update = current;
 
         let (left, right) = (&mut self.left, &mut self.right);
-        Self::preprocess(samples, left, right, &self.config);
 
-        Self::apply_rfft(left);
-        Self::apply_rfft(right);
+        preprocess(samples, left, right, &self.config.window);
 
-        Self::calculate_magnitudes(left);
-        Self::calculate_magnitudes(right);
+        apply_rfft(left);
+        apply_rfft(right);
 
-        Self::aggregate_bands(left, self.sample_rate, &self.config.binning);
-        Self::aggregate_bands(right, self.sample_rate, &self.config.binning);
+        calculate_magnitudes(left);
+        calculate_magnitudes(right);
 
-        Self::apply_band_smoothing(left, &self.config.band_smoothing);
-        Self::apply_band_smoothing(right, &self.config.band_smoothing);
+        aggregate_bands(left, self.sample_rate, &self.config.binning);
+        aggregate_bands(right, self.sample_rate, &self.config.binning);
 
-        Self::apply_scaling(left, &self.config.scaling);
-        Self::apply_scaling(right, &self.config.scaling);
+        apply_band_smoothing(left, &self.config.band_smoothing);
+        apply_band_smoothing(right, &self.config.band_smoothing);
 
-        Self::apply_peak_smoothing(left, current, dt, &self.config.peak_smoothing);
-        Self::apply_peak_smoothing(right, current, dt, &self.config.peak_smoothing);
+        apply_scaling(left, &self.config.scaling);
+        apply_scaling(right, &self.config.scaling);
+
+        apply_peak_smoothing(left, current, dt, &self.config.peak_smoothing);
+        apply_peak_smoothing(right, current, dt, &self.config.peak_smoothing);
 
         // TODO silence detection
-    }
-
-    #[profiling::function]
-    fn preprocess(
-        samples: &[f32; SAMPLE_SIZE],
-        left: &mut Channel,
-        right: &mut Channel,
-        config: &Config,
-    ) {
-        let f = config.window.apply();
-        for (i, chunk) in samples.chunks_exact(2).enumerate() {
-            let t = f(i as f32);
-            let &[l, r] = chunk else { unreachable!() };
-            left.fft_input[i] = l * t;
-            right.fft_input[i] = r * t;
-        }
-    }
-
-    fn apply_rfft(channel: &mut Channel) {
-        rfft::apply_rfft(channel);
-    }
-
-    fn calculate_magnitudes(channel: &mut Channel) {
-        magnitudes::calculate_magnitudes(channel);
-    }
-
-    fn aggregate_bands(channel: &mut Channel, sample_rate: u32, binning: &Binning) {
-        bands::aggregate_bands(channel, sample_rate, binning);
-    }
-
-    fn apply_band_smoothing(channel: &mut Channel, config: &BandSmoothing) {
-        band_smoothing::apply_band_smoothing(channel, config);
-    }
-
-    fn apply_scaling(channel: &mut Channel, config: &Scaling) {
-        scaling::apply_scaling(channel, config);
-    }
-
-    fn apply_peak_smoothing(
-        channel: &mut Channel,
-        current: Instant,
-        dt: f32,
-        config: &PeakSmoothing,
-    ) {
-        peak_smoothing::apply_peak_smoothing(channel, current, dt, config);
     }
 }
