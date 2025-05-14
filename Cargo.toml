@@ -1,0 +1,22 @@
+[package]
+name = "scram"
+version = "0.1.0"
+edition = "2024"
+
+default-run = "scram"
+
+[features]
+profile = [ "puffin_http" ]
+default = [  ]
+
+[dependencies]
+anyhow = "1.0.98"
+cpal = "0.15.3"
+mars_app = { version = "0.1.0", git = "https://github.com/museun/mars" }
+microfft = { version = "0.6.0", features = [ "size-2048" ], default-features = false }
+parking_lot = "0.12.3"
+profiling = { version = "1.0.16", features = [ "profile-with-puffin" ] }
+puffin_http = { version = "0.16.1", optional = true }
+
+# [patch.'https://github.com/museun/mars']
+# mars_app = { path = "f:/rs/mars/crates/mars_app" }
