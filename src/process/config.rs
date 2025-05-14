@@ -1,7 +1,3 @@
-use std::f32::consts::TAU;
-
-const N: f32 = (super::SAMPLE_SIZE / 2) as f32;
-
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Config {
     pub binning: Binning,
@@ -32,32 +28,6 @@ pub enum Window {
     Hamming,
     #[default]
     Blackman,
-}
-
-impl Window {
-    #[inline]
-    pub(crate) const fn apply(&self) -> fn(f32) -> f32 {
-        #[inline(always)]
-        fn hann(d: f32) -> f32 {
-            0.5 * (1.0 - (TAU * d / N - 1.0).cos())
-        }
-
-        #[inline(always)]
-        fn hamming(d: f32) -> f32 {
-            0.54 - 0.46 * (TAU * d / N - 1.0).cos()
-        }
-
-        #[inline(always)]
-        fn blackman(d: f32) -> f32 {
-            0.42 - 0.5 * (TAU * d / N - 1.0).cos() + 0.08 * (TAU * 2.0 * d / N - 1.0).cos()
-        }
-
-        match self {
-            Self::Hann => hann,
-            Self::Hamming => hamming,
-            Self::Blackman => blackman,
-        }
-    }
 }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
