@@ -31,7 +31,13 @@ fn main() -> anyhow::Result<()> {
     let _profile = start_puffin();
 
     let config = config::Config {
-        binning: config::Binning::Bark,
+        binning: config::Binning {
+            frequency_cutoff: config::FrequencyCutoff {
+                low: 20.0,
+                high: 14000.0,
+            },
+            banding: config::Banding::Bark,
+        },
         window: config::Window::Blackman,
         scaling: config::Scaling::Logarithimic,
         peak_smoothing: config::PeakSmoothing {
@@ -40,10 +46,7 @@ fn main() -> anyhow::Result<()> {
             decay_limit: 1.0,
             peak_threshold: 0.001,
         },
-        frequency_cutoff: config::FrequencyCutoff {
-            low: 20.0,
-            high: 14000.0, // FIXME this should be at 16kHz but the mel intervals aren't wrong
-        },
+
         band_smoothing: config::BandSmoothing::Exponential { factor: 0.3 },
     };
 

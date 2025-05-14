@@ -118,17 +118,17 @@ impl Processor {
         Self::calculate_magnitudes(left);
         Self::calculate_magnitudes(right);
 
-        Self::aggregate_bands(left, self.sample_rate, &self.config);
-        Self::aggregate_bands(right, self.sample_rate, &self.config);
+        Self::aggregate_bands(left, self.sample_rate, &self.config.binning);
+        Self::aggregate_bands(right, self.sample_rate, &self.config.binning);
 
-        Self::apply_band_smoothing(left, &self.config);
-        Self::apply_band_smoothing(right, &self.config);
+        Self::apply_band_smoothing(left, &self.config.band_smoothing);
+        Self::apply_band_smoothing(right, &self.config.band_smoothing);
 
-        Self::apply_scaling(left, &self.config);
-        Self::apply_scaling(right, &self.config);
+        Self::apply_scaling(left, &self.config.scaling);
+        Self::apply_scaling(right, &self.config.scaling);
 
-        Self::apply_peak_smoothing(left, current, dt, &self.config);
-        Self::apply_peak_smoothing(right, current, dt, &self.config);
+        Self::apply_peak_smoothing(left, current, dt, &self.config.peak_smoothing);
+        Self::apply_peak_smoothing(right, current, dt, &self.config.peak_smoothing);
 
         // TODO silence detection
     }
@@ -157,19 +157,24 @@ impl Processor {
         magnitudes::calculate_magnitudes(channel);
     }
 
-    fn aggregate_bands(channel: &mut Channel, sample_rate: u32, config: &Config) {
-        bands::aggregate_bands(channel, sample_rate, config);
+    fn aggregate_bands(channel: &mut Channel, sample_rate: u32, binning: &Binning) {
+        bands::aggregate_bands(channel, sample_rate, binning);
     }
 
-    fn apply_band_smoothing(channel: &mut Channel, config: &Config) {
+    fn apply_band_smoothing(channel: &mut Channel, config: &BandSmoothing) {
         band_smoothing::apply_band_smoothing(channel, config);
     }
 
-    fn apply_scaling(channel: &mut Channel, config: &Config) {
+    fn apply_scaling(channel: &mut Channel, config: &Scaling) {
         scaling::apply_scaling(channel, config);
     }
 
-    fn apply_peak_smoothing(channel: &mut Channel, current: Instant, dt: f32, config: &Config) {
+    fn apply_peak_smoothing(
+        channel: &mut Channel,
+        current: Instant,
+        dt: f32,
+        config: &PeakSmoothing,
+    ) {
         peak_smoothing::apply_peak_smoothing(channel, current, dt, config);
     }
 }

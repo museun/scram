@@ -1,8 +1,8 @@
-use super::{Channel, Config, Scaling};
+use super::{Channel, Scaling};
 
 #[profiling::function]
-pub fn apply_scaling(channel: &mut Channel, config: &Config) {
-    match config.scaling {
+pub fn apply_scaling(channel: &mut Channel, config: &Scaling) {
+    match config {
         Scaling::Logarithimic => {
             let reference = 1.0; // TODO config this
 

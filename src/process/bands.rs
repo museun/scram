@@ -1,7 +1,9 @@
-use super::{Binning, Channel, Config};
+use crate::process::Banding;
+
+use super::{Binning, Channel};
 
 #[profiling::function]
-pub fn aggregate_bands(channel: &mut Channel, sample_rate: u32, config: &Config) {
+pub fn aggregate_bands(channel: &mut Channel, sample_rate: u32, binning: &Binning) {
     channel.band_magnitudes.fill(0.0);
 
     let num_bins = channel.fft_magnitudes.len();
@@ -11,16 +13,16 @@ pub fn aggregate_bands(channel: &mut Channel, sample_rate: u32, config: &Config)
     let opts = Opts {
         num_bins,
         num_bands: channel.bars.len(),
-        min_freq: config.frequency_cutoff.low,
-        max_freq: config.frequency_cutoff.high,
+        min_freq: binning.frequency_cutoff.low,
+        max_freq: binning.frequency_cutoff.high,
         hz_per,
     };
 
-    match config.binning {
-        Binning::Linear => apply_linear(channel, opts),
-        Binning::Logarithmic => apply_logarithmic(channel, opts),
-        Binning::Bark => apply_bark(channel, opts),
-        Binning::Mel => apply_mel(channel, opts),
+    match binning.banding {
+        Banding::Linear => apply_linear(channel, opts),
+        Banding::Logarithmic => apply_logarithmic(channel, opts),
+        Banding::Bark => apply_bark(channel, opts),
+        Banding::Mel => apply_mel(channel, opts),
     }
 }
 

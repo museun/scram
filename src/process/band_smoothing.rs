@@ -1,12 +1,12 @@
-use super::{BandSmoothing, Channel, Config};
+use super::{BandSmoothing, Channel};
 
 #[profiling::function]
-pub fn apply_band_smoothing(channel: &mut Channel, config: &Config) {
+pub fn apply_band_smoothing(channel: &mut Channel, config: &BandSmoothing) {
     let num_bands = channel.band_magnitudes.len();
     let smoothed = &mut channel.smoothed_band_magnitudes;
     let magnitudes = &mut channel.band_magnitudes;
 
-    match config.band_smoothing {
+    match config {
         _ if num_bands == 0 => return,
 
         BandSmoothing::Exponential { factor } => {

@@ -9,11 +9,16 @@ pub struct Config {
     pub scaling: Scaling,
     pub band_smoothing: BandSmoothing,
     pub peak_smoothing: PeakSmoothing,
-    pub frequency_cutoff: FrequencyCutoff,
 }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
-pub enum Binning {
+pub struct Binning {
+    pub frequency_cutoff: FrequencyCutoff,
+    pub banding: Banding,
+}
+
+#[derive(Copy, Clone, Default, Debug, PartialEq)]
+pub enum Banding {
     Linear,
     Logarithmic,
     Bark,
@@ -102,12 +107,6 @@ pub struct FrequencyCutoff {
 
 impl Default for FrequencyCutoff {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl FrequencyCutoff {
-    pub const fn new() -> Self {
         Self {
             low: 20.0,
             high: 18000.0,
