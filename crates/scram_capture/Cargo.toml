@@ -2,6 +2,7 @@
 name = "scram_capture"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 scram_process.workspace = true

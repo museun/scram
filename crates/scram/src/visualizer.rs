@@ -1,6 +1,6 @@
-use mars_app::{Axis, BlendMode, Drawable as _, Renderer, Rgba, Size};
+use mars_app::{Axis, BlendMode, Drawable as _, Renderer, Size};
 
-use scram_visualize::{Frequency, Visual, surface::Style, visualizers::*};
+use scram_visualize::{Frequency, Visual, visualizers::*};
 
 use crate::half_block::HalfBlockRenderer;
 

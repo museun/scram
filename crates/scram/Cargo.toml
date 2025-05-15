@@ -2,6 +2,7 @@
 name = "scram"
 version.workspace = true
 edition.workspace = true
+rust-version.workspace = true
 
 [features]
 profile = [ "dep:puffin_http", "profiling/profile-with-puffin" ]
