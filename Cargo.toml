@@ -8,6 +8,7 @@ members = [
 resolver = "3"
 package.version = "0.1.0"
 package.edition = "2024"
+package.rust-version = "1.86.0"
 
 default-members = [ "crates/scram" ]
 
