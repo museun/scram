@@ -48,11 +48,9 @@ impl Context {
             .with_context(|| anyhow::anyhow!("no default output device"))?;
 
         let config = output.default_output_config()?;
-        let mut config = config.config();
-        config.buffer_size = cpal::BufferSize::Fixed(100 as _);
+        let config = config.config();
 
         let (tx, rx) = flume::bounded(4); // gave it some headroom
-
         let stream = output.build_input_stream(
             &config,
             move |data: &[f32], _| {
