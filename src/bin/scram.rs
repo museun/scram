@@ -1,12 +1,10 @@
-use std::sync::Arc;
-
 use mars_app::{Action, Application, Event, Renderer, Rgba, Runner};
-use parking_lot::Mutex;
 
 use scram::{
+    background::Queue,
     capture::Context,
     math::Style,
-    process::{Buffer, Processor, SAMPLE_SIZE, config},
+    process::{Processor, Source, config},
     visualizer::Visualizer,
 };
 
@@ -31,19 +29,19 @@ fn main() -> anyhow::Result<()> {
     let _profile = start_puffin();
 
     let config = config::Config {
-        binning: config::Binning {
+        banding: config::Banding {
             frequency_cutoff: config::FrequencyCutoff {
                 low: 20.0,
-                high: 14000.0,
+                high: 20000.0,
             },
-            banding: config::Banding::Bark,
+            scale: config::FrequencyScale::Mel,
         },
         window: config::Window::Blackman,
-        scaling: config::Scaling::Logarithimic,
+        scaling: config::VolumeScale::Logarithimic,
         peak_smoothing: config::PeakSmoothing {
             attack_rate: 20.0,
-            decay_rate: 0.8,
-            decay_limit: 1.0,
+            decay_rate: 0.3,
+            decay_limit: 0.5,
             peak_threshold: 0.001,
         },
 
@@ -62,12 +60,37 @@ fn main() -> anyhow::Result<()> {
         ratio: 1.5,
     };
 
-    let (ctx, buffer) = Context::create()?;
+    let sample_size = Processor::MAX_SAMPLE_SIZE;
+    let (source, mut buffer) = Context::create(sample_size)?;
+
+    let mut processor = Processor::new(source.sample_rate(), sample_size, config)?;
+    let queue = Queue::default();
+
+    let (tx, rx) = flume::unbounded();
+
+    std::thread::spawn({
+        let queue = queue.clone();
+        profiling::register_thread!("read samples");
+        move || loop {
+            match rx.try_recv() {
+                Ok(bands) => processor.set_bands(bands),
+                Err(flume::TryRecvError::Disconnected) => return,
+                _ => {}
+            }
+
+            if processor.update(&mut buffer) {
+                profiling::scope!("put in current frequencies");
+                queue.put(processor.current_frequencies().map(<_>::to_owned));
+            }
+        }
+    });
+
     App {
-        processor: Processor::new(ctx.sample_rate(), config),
+        tx,
+        queue,
         visualizer: Visualizer::new(left_style, right_style),
-        buffer: buffer.drain_in_background(),
-        _ctx: ctx,
+
+        _source: Box::new(source),
         dt: 0.0,
     }
     .run(60.0)?;
@@ -76,10 +99,10 @@ fn main() -> anyhow::Result<()> {
 }
 
 struct App {
-    processor: Processor,
+    queue: Queue,
+    tx: flume::Sender<usize>,
     visualizer: Visualizer,
-    buffer: Arc<Mutex<dyn Buffer<SAMPLE_SIZE>>>,
-    _ctx: Context,
+    _source: Box<dyn Source>,
     dt: f32,
 }
 
@@ -87,9 +110,10 @@ impl Application for App {
     fn event(&mut self, event: Event) -> Action {
         if let Event::Resize { size } = event {
             let bands = self.visualizer.axis().cross(size);
-            self.processor.set_bands(bands as usize);
+            _ = self.tx.send(bands as usize);
             self.visualizer.resize(size);
         }
+
         Action::Continue
     }
 
@@ -101,14 +125,8 @@ impl Application for App {
     #[profiling::function]
     fn render(&mut self, renderer: &mut impl Renderer) {
         profiling::finish_frame!();
-
-        {
-            profiling::scope!("lock and update");
-            let g = &mut *self.buffer.lock();
-            self.processor.update(g);
+        if let Some([left, right]) = self.queue.take() {
+            self.visualizer.draw(&left, &right, self.dt / 1.0, renderer);
         }
-
-        let (left, right) = self.processor.current_frequencies();
-        self.visualizer.draw(left, right, self.dt / 1.0, renderer);
     }
 }

@@ -34,13 +34,15 @@ impl HalfBlockRenderer {
         self.surface.set(pos, color.into());
     }
 
-    pub fn resize(&mut self, mut size: Size) {
+    pub fn resize(&mut self, mut size: Size) -> Size {
+        let unscaled = size;
         size *= match self.axis {
             Axis::Horizontal => Size::new(2, 1),
             Axis::Vertical => Size::new(1, 2),
         };
         self.size = size;
-        self.surface.resize(size, ResizeMode::Discard)
+        self.surface.resize(size, ResizeMode::Discard);
+        unscaled
     }
 
     pub fn dimensions(&self) -> Size {

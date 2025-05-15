@@ -1,9 +1,14 @@
-pub trait Buffer<const SAMPLE_SIZE: usize>: Send + 'static {
-    fn read_samples(&mut self) -> Option<&[f32; SAMPLE_SIZE]>;
+pub trait Buffer: Send + 'static {
+    fn read_samples(&mut self, sample_size: usize) -> Option<&[f32]>;
 }
 
-impl<const N: usize, T: Buffer<N>> Buffer<N> for Box<T> {
-    fn read_samples(&mut self) -> Option<&[f32; N]> {
-        (**self).read_samples()
+impl<T: Buffer> Buffer for Box<T> {
+    fn read_samples(&mut self, sample_size: usize) -> Option<&[f32]> {
+        (**self).read_samples(sample_size)
     }
+}
+
+pub trait Source {
+    fn sample_rate(&self) -> u32;
+    fn sample_size(&self) -> usize;
 }

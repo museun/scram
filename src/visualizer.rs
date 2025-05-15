@@ -1,4 +1,5 @@
 use mars_app::{Axis, BlendMode, Drawable, Renderer, Rgba, Size};
+use visualizers::{Visual as _, *};
 
 use crate::{
     math::{Style, gradient},
@@ -22,7 +23,8 @@ pub struct Visualizer {
     left_style: Style,
     right_style: Style,
     style: VisualStyle,
-    zoom: f32,
+
+    scrolling_spectro: ScrollingSpectro,
 }
 
 impl Default for Visualizer {
@@ -50,12 +52,13 @@ impl Visualizer {
             left_style,
             right_style,
             style: VisualStyle::Bar,
-            zoom: 1.3,
+            scrolling_spectro: ScrollingSpectro::new(),
         }
     }
 
     pub fn resize(&mut self, size: Size) {
-        self.renderer.resize(size)
+        let _unscaled = self.renderer.resize(size);
+        self.scrolling_spectro.resize(self.renderer.dimensions());
     }
 
     pub fn axis(&self) -> Axis {
@@ -75,24 +78,42 @@ impl Visualizer {
         }
 
         // for reference
-        visualizers::draw_spec_slice(left, right, dt, &mut self.renderer);
+        DrawSpecSlice.draw(left, right, dt, &mut self.renderer);
 
+        // self.scrolling_spectro
+        //     .draw(left, right, dt, &mut self.renderer);
+
+        // TODO move this out to its own `Visual`
         // TODO if vertical renderer then we should draw the bars in reverse order
-        let draw = match self.style {
-            VisualStyle::Bar => Self::draw_bar,
-            VisualStyle::Outline => Self::draw_outline,
-        };
-        for (pos, bar) in left.iter().enumerate().map(|(p, b)| (p as i32, b)) {
-            draw(self, bar, self.left_style, pos, Direction::Up);
-        }
-        for (pos, bar) in right.iter().enumerate().map(|(p, b)| (p as i32, b)) {
-            draw(self, bar, self.right_style, pos, Direction::Down);
-        }
+        // let draw = match self.style {
+        //     VisualStyle::Bar => Self::draw_bar,
+        //     VisualStyle::Outline => Self::draw_outline,
+        // };
 
-        // visualizers::kinetic(left, right, dt, &mut self.renderer);
-        // visualizers::draw_stacked_freqs(left, right, dt, &mut self.renderer);
-        // visualizers::draw_spec_circular(left, right, dt, &mut self.renderer);
-        // visualizers::draw_radial_bloom(left, right, dt, &mut self.renderer);
+        // let t = Style {
+        //     color: Rgba::hex("#000"),
+        //     accent: Rgba::hex("#FFF"),
+        //     ratio: 0.1,
+        // };
+        // for (pos, bar) in left.iter().enumerate().map(|(p, b)| (p as i32, b)) {
+        //     draw(self, bar, self.left_style, pos, Direction::Up);
+        //     Self::draw_outline(self, bar, t, pos, Direction::Up)
+        // }
+
+        // let t = Style {
+        //     color: Rgba::hex("#FFF"),
+        //     accent: Rgba::hex("#000"),
+        //     ratio: 3.0,
+        // };
+        // for (pos, bar) in right.iter().enumerate().map(|(p, b)| (p as i32, b)) {
+        //     draw(self, bar, self.right_style, pos, Direction::Down);
+        //     Self::draw_outline(self, bar, t, pos, Direction::Down)
+        // }
+
+        // Kinetic.draw(left, right, dt, &mut self.renderer);
+        DrawStackedFreqs.draw(left, right, dt, &mut self.renderer);
+        DrawSpecCircular.draw(left, right, dt, &mut self.renderer);
+        // DrawRadialBloom.draw(left, right, dt, &mut self.renderer);
 
         self.renderer.render(renderer, BlendMode::Replace);
         self.renderer.clear();
@@ -103,7 +124,7 @@ impl Visualizer {
         let main = axis.main(self.renderer.dimensions());
 
         let center = main / 2;
-        let v = bar.value * self.zoom;
+        let v = bar.value;
 
         let lenf = (v * center as f32).max(0.0).min(center as f32);
         let len = (lenf.round() as u32).max(1);
@@ -134,7 +155,7 @@ impl Visualizer {
         let main = axis.main(self.renderer.dimensions());
 
         let center = main / 2;
-        let v = bar.value * self.zoom;
+        let v = bar.value;
 
         let lenf = (v * center as f32).max(0.0).min(center as f32);
         let len = lenf.round() as u32;

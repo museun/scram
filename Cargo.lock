@@ -271,6 +271,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "flume"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da0e4dd2a88388a1f4ccc7c9ce104604dab68d9f408dc34cd45823d5a9069095"
+dependencies = [
+ "spin",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -426,7 +435,7 @@ dependencies = [
 [[package]]
 name = "mars_app"
 version = "0.1.0"
-source = "git+https://github.com/museun/mars#8660de7a94f83b794883bcca3f92d5da9d49d241"
+source = "git+https://github.com/museun/mars?rev=52d236192b73fd3d8086251da4dec02341787183#52d236192b73fd3d8086251da4dec02341787183"
 dependencies = [
  "mars_math",
  "mars_surface",
@@ -436,12 +445,12 @@ dependencies = [
 [[package]]
 name = "mars_math"
 version = "0.1.0"
-source = "git+https://github.com/museun/mars#8660de7a94f83b794883bcca3f92d5da9d49d241"
+source = "git+https://github.com/museun/mars?rev=52d236192b73fd3d8086251da4dec02341787183#52d236192b73fd3d8086251da4dec02341787183"
 
 [[package]]
 name = "mars_surface"
 version = "0.1.0"
-source = "git+https://github.com/museun/mars#8660de7a94f83b794883bcca3f92d5da9d49d241"
+source = "git+https://github.com/museun/mars?rev=52d236192b73fd3d8086251da4dec02341787183#52d236192b73fd3d8086251da4dec02341787183"
 dependencies = [
  "compact_str",
  "mars_math",
@@ -452,7 +461,7 @@ dependencies = [
 [[package]]
 name = "mars_terminal"
 version = "0.1.0"
-source = "git+https://github.com/museun/mars#8660de7a94f83b794883bcca3f92d5da9d49d241"
+source = "git+https://github.com/museun/mars?rev=52d236192b73fd3d8086251da4dec02341787183#52d236192b73fd3d8086251da4dec02341787183"
 dependencies = [
  "mars_math",
  "termina",
@@ -801,6 +810,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cpal",
+ "flume",
  "mars_app",
  "microfft",
  "parking_lot",
@@ -860,6 +870,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
 
 [[package]]
+name = "spin"
+version = "0.9.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+dependencies = [
+ "lock_api",
+]
+
+[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -879,7 +898,7 @@ dependencies = [
 [[package]]
 name = "termina"
 version = "0.1.0-beta.1"
-source = "git+https://github.com/helix-editor/termina?rev=07cc87ef7ae03e63557da8d73f1eb8a6028b23ca#07cc87ef7ae03e63557da8d73f1eb8a6028b23ca"
+source = "git+https://github.com/helix-editor/termina?rev=b7f6c327a64533c5c798e2c409191620b75c492e#b7f6c327a64533c5c798e2c409191620b75c492e"
 dependencies = [
  "bitflags 2.9.0",
  "parking_lot",

@@ -1,57 +1,32 @@
-use std::{collections::VecDeque, sync::Arc};
+use std::collections::VecDeque;
 
 use anyhow::Context as _;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use parking_lot::Mutex;
 
-use crate::process::{Buffer, SAMPLE_SIZE};
+use crate::process::{Buffer, Source};
 
 pub struct CpalBuffer {
-    rx: std::sync::mpsc::Receiver<Box<[f32]>>,
+    rx: flume::Receiver<Box<[f32]>>,
     buffer: VecDeque<f32>,
 }
 
-impl CpalBuffer {
-    pub fn drain_in_background(self) -> Arc<Mutex<dyn Buffer<SAMPLE_SIZE>>> {
-        let buffer = Arc::new(Mutex::new(self)) as Arc<Mutex<dyn Buffer<SAMPLE_SIZE>>>;
+impl Buffer for CpalBuffer {
+    #[profiling::function]
+    fn read_samples(&mut self, sample_size: usize) -> Option<&[f32]> {
+        let data = self.rx.recv().ok()?;
 
-        let _ = std::thread::spawn({
-            let buffer = buffer.clone();
-            move || {
-                loop {
-                    if let Some(mut g) = buffer.try_lock() {
-                        g.read_samples();
-                    }
-                    std::thread::park_timeout(std::time::Duration::from_micros(1));
-                    std::thread::yield_now();
-                }
-            }
-        });
-
-        buffer
-    }
-}
-
-impl Buffer<SAMPLE_SIZE> for CpalBuffer {
-    // this shouldn't be non-blocking, it should be async
-    // so, the UI can update at 60 fps, but the buffer is populated at 300~ (with a sample rate of 96kHz) fps
-    fn read_samples(&mut self) -> Option<&[f32; SAMPLE_SIZE]> {
-        let Ok(data) = self.rx.try_recv() else {
-            return None;
-        };
-
+        profiling::scope!("append data");
         let current = self.buffer.len();
         let delta = current
             .saturating_add(data.len())
-            .saturating_sub(SAMPLE_SIZE);
+            .saturating_sub(sample_size);
 
         self.buffer.drain(..delta);
         self.buffer.extend(data);
 
-        if self.buffer.len() == SAMPLE_SIZE {
-            let slice = self.buffer.make_contiguous();
-            let data = <&[f32; SAMPLE_SIZE]>::try_from(&*slice).unwrap();
-            return Some(data);
+        if self.buffer.len() == sample_size {
+            profiling::scope!("vecdeque to slice");
+            return Some(self.buffer.make_contiguous());
         }
 
         None
@@ -61,10 +36,11 @@ impl Buffer<SAMPLE_SIZE> for CpalBuffer {
 pub struct Context {
     _stream: cpal::Stream,
     sample_rate: cpal::SampleRate,
+    sample_size: usize,
 }
 
 impl Context {
-    pub fn create() -> anyhow::Result<(Self, CpalBuffer)> {
+    pub fn create(sample_size: usize) -> anyhow::Result<(impl Source, CpalBuffer)> {
         let host = cpal::default_host();
 
         let output = host
@@ -75,11 +51,13 @@ impl Context {
         let mut config = config.config();
         config.buffer_size = cpal::BufferSize::Fixed(100 as _);
 
-        let (tx, rx) = std::sync::mpsc::channel();
+        let (tx, rx) = flume::bounded(4); // gave it some headroom
 
         let stream = output.build_input_stream(
             &config,
-            move |data: &[f32], _| drop(tx.send(Box::from(data))),
+            move |data: &[f32], _| {
+                _ = tx.send(Box::from(data));
+            },
             |err| eprintln!("cpal input stream read err: {err}"),
             None,
         )?;
@@ -89,19 +67,26 @@ impl Context {
             .with_context(|| "cannot start output stream")?;
 
         let handle = CpalBuffer {
-            buffer: VecDeque::with_capacity(SAMPLE_SIZE),
+            buffer: VecDeque::with_capacity(sample_size),
             rx,
         };
 
         let this = Self {
             _stream: stream,
             sample_rate: config.sample_rate,
+            sample_size,
         };
 
         Ok((this, handle))
     }
+}
 
-    pub fn sample_rate(&self) -> u32 {
+impl Source for Context {
+    fn sample_rate(&self) -> u32 {
         self.sample_rate.0
+    }
+
+    fn sample_size(&self) -> usize {
+        self.sample_size
     }
 }

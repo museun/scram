@@ -6,17 +6,16 @@ edition = "2024"
 default-run = "scram"
 
 [features]
-profile = [ "puffin_http" ]
+profile = [ "dep:puffin_http", "profiling/profile-with-puffin" ]
 default = [  ]
 
 [dependencies]
 anyhow = "1.0.98"
 cpal = "0.15.3"
-mars_app = { version = "0.1.0", git = "https://github.com/museun/mars" }
+flume = { version = "0.11.1", default-features = false }
+mars_app = { version = "0.1.0", git = "https://github.com/museun/mars", rev = "52d236192b73fd3d8086251da4dec02341787183" }
 microfft = { version = "0.6.0", features = [ "size-2048" ], default-features = false }
 parking_lot = "0.12.3"
-profiling = { version = "1.0.16", features = [ "profile-with-puffin" ] }
-puffin_http = { version = "0.16.1", optional = true }
 
-# [patch.'https://github.com/museun/mars']
-# mars_app = { path = "f:/rs/mars/crates/mars_app" }
+profiling = { version = "1.0.16" }
+puffin_http = { version = "0.16.1", optional = true }

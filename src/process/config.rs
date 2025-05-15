@@ -1,20 +1,20 @@
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub struct Config {
-    pub binning: Binning,
+    pub banding: Banding,
     pub window: Window,
-    pub scaling: Scaling,
+    pub scaling: VolumeScale,
     pub band_smoothing: BandSmoothing,
     pub peak_smoothing: PeakSmoothing,
 }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
-pub struct Binning {
+pub struct Banding {
     pub frequency_cutoff: FrequencyCutoff,
-    pub banding: Banding,
+    pub scale: FrequencyScale,
 }
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
-pub enum Banding {
+pub enum FrequencyScale {
     Linear,
     Logarithmic,
     Bark,
@@ -32,7 +32,8 @@ pub enum Window {
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 #[non_exhaustive]
-pub enum Scaling {
+pub enum VolumeScale {
+    Linear,
     #[default]
     Logarithimic,
 }
@@ -59,6 +60,7 @@ impl Default for PeakSmoothing {
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum BandSmoothing {
+    None,
     Exponential { factor: f32 },
     MovingAverage { window_size: f32 },
 }
