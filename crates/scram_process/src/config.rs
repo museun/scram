@@ -24,6 +24,7 @@ pub enum FrequencyScale {
 
 #[derive(Copy, Clone, Default, Debug, PartialEq)]
 pub enum Window {
+    None,
     Hann,
     Hamming,
     #[default]
@@ -62,7 +63,7 @@ impl Default for PeakSmoothing {
 pub enum BandSmoothing {
     None,
     Exponential { factor: f32 },
-    MovingAverage { window_size: f32 },
+    MovingAverage { window_size: usize },
 }
 
 impl Default for BandSmoothing {

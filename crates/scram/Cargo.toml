@@ -1,0 +1,22 @@
+[package]
+name = "scram"
+version.workspace = true
+edition.workspace = true
+
+[features]
+profile = [ "dep:puffin_http", "profiling/profile-with-puffin" ]
+default = [  ]
+
+[dependencies]
+scram_process.workspace = true
+scram_capture.workspace = true
+scram_visualize.workspace = true
+
+parking_lot.workspace = true
+anyhow.workspace = true
+profiling.workspace = true
+flume.workspace = true
+
+mars_app = { version = "0.1.0", git = "https://github.com/museun/mars", rev = "f379f464b9a03c92c8916536364714fb31b1d527" }
+
+puffin_http = { version = "0.16.1", optional = true }

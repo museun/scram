@@ -3,6 +3,11 @@ use std::f32::consts::TAU;
 use super::{Channel, Window};
 
 #[inline(always)]
+fn none(_d: f32, _n: f32) -> f32 {
+    1.0
+}
+
+#[inline(always)]
 fn hann(d: f32, n: f32) -> f32 {
     0.5 * (1.0 - (TAU * d / n - 1.0).cos())
 }
@@ -26,6 +31,7 @@ pub fn preprocess(
     sample_size: usize,
 ) {
     let f = match config {
+        Window::None => none,
         Window::Hann => hann,
         Window::Hamming => hamming,
         Window::Blackman => blackman,

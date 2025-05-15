@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use anyhow::Context as _;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 
-use crate::process::{Buffer, Source};
+use scram_process::{Buffer, Source};
 
 pub struct CpalBuffer {
     rx: flume::Receiver<Box<[f32]>>,

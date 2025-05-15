@@ -1,6 +1,4 @@
-use crate::process::FrequencyScale;
-
-use super::{Banding, Channel};
+use super::{Banding, Channel, FrequencyScale};
 
 #[profiling::function]
 pub fn aggregate_bands(channel: &mut Channel, sample_rate: u32, banding: &Banding) {

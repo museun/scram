@@ -1,0 +1,13 @@
+[package]
+name = "scram_capture"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+scram_process.workspace = true
+
+anyhow.workspace = true
+cpal = "0.15.3"
+flume.workspace = true
+parking_lot.workspace = true
+profiling.workspace = true

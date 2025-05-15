@@ -1,6 +1,7 @@
 use mars_app::{
-    Axis, BlendMode, Color, Drawable, Pixel, Placer, Position, ResizeMode, Size, Surface,
+    Axis, BlendMode, Color, Drawable, Pixel, Placer, Position, ResizeMode, Rgba, Size, Surface,
 };
+use scram_visualize::Canvas;
 
 pub struct HalfBlockRenderer {
     size: Size,
@@ -61,6 +62,20 @@ impl Drawable for HalfBlockRenderer {
 
     fn size(&self, _input: Size) -> Size {
         self.size
+    }
+}
+
+impl Canvas for HalfBlockRenderer {
+    fn put(&mut self, x: i32, y: i32, color: Rgba) {
+        Self::put(self, Position::new(x, y), color);
+    }
+
+    fn width(&self) -> u32 {
+        self.dimensions().width
+    }
+
+    fn height(&self) -> u32 {
+        self.dimensions().height
     }
 }
 

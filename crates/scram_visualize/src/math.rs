@@ -1,4 +1,23 @@
-use mars_app::Rgba;
+#[doc(inline)]
+pub use mars_math::*;
+
+use crate::surface::{Rgba, Style};
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum Direction {
+    Up,
+    Down,
+}
+
+impl Direction {
+    pub const fn is_down(&self) -> bool {
+        matches!(self, Self::Down)
+    }
+
+    pub const fn is_up(&self) -> bool {
+        matches!(self, Self::Up)
+    }
+}
 
 pub fn inverse_lerp(a: f32, b: f32, t: f32) -> f32 {
     (t - a) / (b - a)
@@ -71,9 +90,21 @@ pub fn gradient(t: f32, steps: u32, style: Style) -> impl DoubleEndedIterator<It
     })
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub struct Style {
-    pub color: Rgba,
-    pub accent: Rgba,
-    pub ratio: f32,
+pub fn spectro_color(t: f32) -> Rgba {
+    const COLOR_0: Rgba = Rgba::hex("#303066");
+    const COLOR_1: Rgba = Rgba::hex("#0000FF");
+    const COLOR_2: Rgba = Rgba::hex("#00FFFF");
+    const COLOR_3: Rgba = Rgba::hex("#00FF00");
+    const COLOR_4: Rgba = Rgba::hex("#FFFF00");
+    const COLOR_5: Rgba = Rgba::hex("#FF0000");
+    const COLOR_6: Rgba = Rgba::hex("#FFFFFF");
+
+    match t {
+        ..0.20 => lerp_color(COLOR_0, COLOR_1, inverse_lerp(0.00, 0.20, t)),
+        ..0.35 => lerp_color(COLOR_1, COLOR_2, inverse_lerp(0.20, 0.35, t)),
+        ..0.50 => lerp_color(COLOR_2, COLOR_3, inverse_lerp(0.35, 0.50, t)),
+        ..0.60 => lerp_color(COLOR_3, COLOR_4, inverse_lerp(0.50, 0.60, t)),
+        ..0.80 => lerp_color(COLOR_4, COLOR_5, inverse_lerp(0.70, 0.80, t)),
+        t => lerp_color(COLOR_5, COLOR_6, inverse_lerp(0.80, 1.00, t)),
+    }
 }

@@ -17,19 +17,19 @@ pub fn apply_band_smoothing(channel: &mut Channel, config: &BandSmoothing) {
             let factor = factor.clamp(0.0, 1.0);
             for i in 0..num_bands {
                 let scale = (1.0 - factor) * smoothed[i.saturating_sub(1)];
-                let t = factor * magnitudes[i] + scale;
-                smoothed[i] = t;
+                smoothed[i] = factor * magnitudes[i] + scale;
             }
         }
 
-        BandSmoothing::MovingAverage { window_size } => {
-            let window_size = window_size.max(1.0).round() as usize;
+        &BandSmoothing::MovingAverage { window_size } => {
+            let window_size = window_size.max(1);
             for (i, sample) in smoothed.iter_mut().enumerate() {
                 let start = i.saturating_sub(window_size / 2);
                 let end = (i + window_size / 2 + 1).min(num_bands);
 
                 let count = end.saturating_sub(start);
                 let mag = magnitudes[start..end].iter().sum::<f32>();
+
                 let norm = if count > 0 { 1.0 } else { 0.0 };
                 *sample = mag / count as f32 * norm;
             }

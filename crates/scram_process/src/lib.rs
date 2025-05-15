@@ -27,6 +27,9 @@ use rfft::apply_rfft;
 mod scaling;
 use scaling::apply_scaling;
 
+mod background;
+pub use background::Slot;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Frequency {
     pub value: f32,

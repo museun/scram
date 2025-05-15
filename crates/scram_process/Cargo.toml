@@ -1,0 +1,11 @@
+[package]
+name = "scram_process"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+flume.workspace = true
+microfft = { version = "0.6.0", features = [ "size-2048" ], default-features = false }
+parking_lot.workspace = true
+profiling.workspace = true

@@ -1,0 +1,12 @@
+[package]
+name = "scram_visualize"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+scram_process.workspace = true
+
+profiling.workspace = true
+
+mars_math = { version = "0.1.0", git = "https://github.com/museun/mars", rev = "f379f464b9a03c92c8916536364714fb31b1d527" }
+mars_surface = { version = "0.1.0", git = "https://github.com/museun/mars", rev = "f379f464b9a03c92c8916536364714fb31b1d527" }

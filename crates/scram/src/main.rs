@@ -1,12 +1,11 @@
-use mars_app::{Action, Application, Event, Renderer, Rgba, Runner};
+use scram_capture::Context;
+use scram_process::{Processor, Slot, Source, config};
 
-use scram::{
-    background::Queue,
-    capture::Context,
-    math::Style,
-    process::{Processor, Source, config},
-    visualizer::Visualizer,
-};
+use mars_app::{Action, Application, Event, Renderer, Runner};
+
+mod half_block;
+mod visualizer;
+use visualizer::Visualizer;
 
 #[cfg(feature = "profile")]
 fn start_puffin() -> impl Drop {
@@ -40,36 +39,24 @@ fn main() -> anyhow::Result<()> {
         scaling: config::VolumeScale::Logarithimic,
         peak_smoothing: config::PeakSmoothing {
             attack_rate: 20.0,
-            decay_rate: 0.3,
-            decay_limit: 0.5,
+            decay_rate: 0.5,
+            decay_limit: 1.0,
             peak_threshold: 0.001,
         },
-
-        band_smoothing: config::BandSmoothing::Exponential { factor: 0.3 },
-    };
-
-    let left_style = Style {
-        color: Rgba::hex("#0FF"),
-        accent: Rgba::hex("#F00"),
-        ratio: 3.5,
-    };
-
-    let right_style = Style {
-        color: Rgba::hex("#339"),
-        accent: Rgba::hex("#909"),
-        ratio: 1.5,
+        band_smoothing: config::BandSmoothing::MovingAverage { window_size: 8 },
+        // band_smoothing: config::BandSmoothing::Exponential { factor: 0.3 },
     };
 
     let sample_size = Processor::MAX_SAMPLE_SIZE;
     let (source, mut buffer) = Context::create(sample_size)?;
 
-    let mut processor = Processor::new(source.sample_rate(), sample_size, config)?;
-    let queue = Queue::default();
-
     let (tx, rx) = flume::unbounded();
 
+    let mut processor = Processor::new(source.sample_rate(), sample_size, config)?;
+    let slot = Slot::default();
+
     std::thread::spawn({
-        let queue = queue.clone();
+        let slot = slot.clone();
         profiling::register_thread!("read samples");
         move || loop {
             match rx.try_recv() {
@@ -80,16 +67,15 @@ fn main() -> anyhow::Result<()> {
 
             if processor.update(&mut buffer) {
                 profiling::scope!("put in current frequencies");
-                queue.put(processor.current_frequencies().map(<_>::to_owned));
+                slot.put(processor.current_frequencies().map(<_>::to_owned));
             }
         }
     });
 
     App {
+        slot,
         tx,
-        queue,
-        visualizer: Visualizer::new(left_style, right_style),
-
+        visualizer: Visualizer::new(),
         _source: Box::new(source),
         dt: 0.0,
     }
@@ -99,7 +85,7 @@ fn main() -> anyhow::Result<()> {
 }
 
 struct App {
-    queue: Queue,
+    slot: Slot,
     tx: flume::Sender<usize>,
     visualizer: Visualizer,
     _source: Box<dyn Source>,
@@ -125,7 +111,7 @@ impl Application for App {
     #[profiling::function]
     fn render(&mut self, renderer: &mut impl Renderer) {
         profiling::finish_frame!();
-        if let Some([left, right]) = self.queue.take() {
+        if let Some([left, right]) = self.slot.take() {
             self.visualizer.draw(&left, &right, self.dt / 1.0, renderer);
         }
     }
